@@ -1,6 +1,10 @@
 package service
 
-import "time"
+import (
+	"time"
+
+	"github.com/deatil/go-encoding/encoding"
+)
 
 type ShortURL struct {
 	Code        string
@@ -18,5 +22,6 @@ func ShortenURL(originalURL string) *ShortURL {
 }
 
 func generateShortURL(url string) string {
-	return "abc123"
+	code := encoding.FromString(url).Base62Encode().ToString()
+	return code
 }
