@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
@@ -67,8 +69,13 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url, err := service.GetLongUrlByCode(code, h.queries)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.NotFound(w, r)
+		return
+	}
 	if err != nil {
-		log.Fatalf("error fetching url: %s", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
 	}
 
 	response := &RedirectResponse{
