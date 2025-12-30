@@ -6,8 +6,13 @@ import (
 	"net/http"
 
 	"github.com/hanson777/url-shortener/internal/service"
+	"github.com/hanson777/url-shortener/internal/sqlc"
 	"github.com/hanson777/url-shortener/internal/writer"
 )
+
+type Handler struct {
+	queries *sqlc.Queries
+}
 
 var ShortenURLRequest struct {
 	URL string
@@ -18,7 +23,15 @@ type ShortenURLResponse struct {
 	LongURL  string
 }
 
-func CreateShortURL(w http.ResponseWriter, r *http.Request) {
+type RedirectResponse struct {
+	Url string
+}
+
+func NewHandler(queries *sqlc.Queries) *Handler {
+	return &Handler{queries: queries}
+}
+
+func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&ShortenURLRequest); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
@@ -31,7 +44,7 @@ func CreateShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	code, _ := service.InsertShortURL(ShortenURLRequest.URL)
+	code, _ := service.InsertShortURL(ShortenURLRequest.URL, h.queries)
 
 	response := ShortenURLResponse{
 		ShortURL: "http://localhost:8080/" + code.Code,
@@ -42,4 +55,25 @@ func CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("error encoding writer: %s", err)
 	}
+}
+
+func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
+
+	code := r.PathValue("code")
+
+	if code == "" {
+		log.Fatal("Code must be non-empty")
+		return
+	}
+
+	url, err := service.GetLongUrlByCode(code, h.queries)
+	if err != nil {
+		log.Fatalf("error fetching url: %s", err)
+	}
+
+	response := &RedirectResponse{
+		url.LongUrl,
+	}
+
+	http.Redirect(w, r, response.Url, http.StatusPermanentRedirect)
 }

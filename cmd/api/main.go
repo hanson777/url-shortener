@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/hanson777/url-shortener/internal/handler"
+	"github.com/hanson777/url-shortener/internal/sqlc"
 	"github.com/jackc/pgx/v5"
 	"github.com/lpernett/godotenv"
 )
@@ -20,14 +21,18 @@ func main() {
 	}
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /api/shorten", handler.CreateShortURL)
-	mux.HandleFunc("GET /{code}", handler.Redirect)
-
 	conn, err := pgx.Connect(ctx, os.Getenv("POSTGRES_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close(ctx)
+
+	queries := sqlc.New(conn)
+
+	h := handler.NewHandler(queries)
+
+	mux.HandleFunc("POST /api/shorten", h.CreateShortURL)
+	mux.HandleFunc("GET /{code}", h.Redirect)
 
 	log.Print("Server listening on port 8080")
 	err = http.ListenAndServe(":8080", mux)
