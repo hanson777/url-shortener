@@ -10,7 +10,7 @@ import (
 
 type Url struct {
 	ID        int64
-	Code      string
 	LongUrl   string
+	Clicks    int32
 	CreatedAt pgtype.Timestamptz
 }

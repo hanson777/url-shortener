@@ -20,11 +20,8 @@ func main() {
 	}
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("All systems nominal"))
-	})
-
 	mux.HandleFunc("POST /api/shorten", handler.CreateShortURL)
+	mux.HandleFunc("GET /{code}", handler.Redirect)
 
 	conn, err := pgx.Connect(ctx, os.Getenv("POSTGRES_URL"))
 	if err != nil {

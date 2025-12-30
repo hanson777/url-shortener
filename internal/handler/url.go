@@ -2,31 +2,44 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/hanson777/url-shortener/internal/service"
+	"github.com/hanson777/url-shortener/internal/writer"
 )
 
-func CreateShortURL(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		URL string
-	}
+var ShortenURLRequest struct {
+	URL string
+}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+type ShortenURLResponse struct {
+	ShortURL string
+	LongURL  string
+}
+
+func CreateShortURL(w http.ResponseWriter, r *http.Request) {
+	if err := json.NewDecoder(r.Body).Decode(&ShortenURLRequest); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	defer r.Body.Close()
 
-	if req.URL == "" {
+	if ShortenURLRequest.URL == "" {
 		http.Error(w, "URL is required", http.StatusBadRequest)
 		return
 	}
 
-	response := service.ShortenURL(req.URL)
+	code, _ := service.InsertShortURL(ShortenURLRequest.URL)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	response := ShortenURLResponse{
+		ShortURL: "http://localhost:8080/" + code.Code,
+		LongURL:  ShortenURLRequest.URL,
+	}
+
+	err := writer.Write(w, http.StatusCreated, response)
+	if err != nil {
+		log.Fatalf("error encoding writer: %s", err)
+	}
 }
