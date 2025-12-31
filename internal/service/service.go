@@ -8,10 +8,6 @@ import (
 	"github.com/sqids/sqids-go"
 )
 
-type URLDecoding struct {
-	LongUrl string
-}
-
 type URLEncoding struct {
 	Code string
 }

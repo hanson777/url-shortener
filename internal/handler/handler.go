@@ -16,7 +16,7 @@ type Handler struct {
 	queries *sqlc.Queries
 }
 
-var ShortenURLRequest struct {
+type ShortenURLRequest struct {
 	URL string
 }
 
@@ -34,23 +34,31 @@ func NewHandler(queries *sqlc.Queries) *Handler {
 }
 
 func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewDecoder(r.Body).Decode(&ShortenURLRequest); err != nil {
+	var req ShortenURLRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	defer r.Body.Close()
 
-	if ShortenURLRequest.URL == "" {
+	if req.URL == "" {
 		http.Error(w, "URL is required", http.StatusBadRequest)
 		return
 	}
 
-	code, _ := service.InsertShortURL(ShortenURLRequest.URL, h.queries)
+	normalizedUrl := normalizeUrl(req.URL)
+
+	if !isValidURL(normalizedUrl) {
+		http.Error(w, "URL is not valid", http.StatusBadRequest)
+		return
+	}
+
+	code, _ := service.InsertShortURL(normalizedUrl, h.queries)
 
 	response := ShortenURLResponse{
 		ShortURL: "http://localhost:8080/" + code.Code,
-		LongURL:  ShortenURLRequest.URL,
+		LongURL:  normalizedUrl,
 	}
 
 	err := writer.Write(w, http.StatusCreated, response)

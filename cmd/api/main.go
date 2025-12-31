@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	log.Print("Starting...")
 	ctx := context.Background()
 
 	err := godotenv.Load()
@@ -35,9 +36,9 @@ func main() {
 	mux.HandleFunc("POST /api/shorten", h.CreateShortURL)
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
+	log.Print("Server listening on port 8080")
 	err = http.ListenAndServe(":8080", middleware.Cors(mux))
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Print("Server listening on port 8080")
 }
