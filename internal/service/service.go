@@ -8,10 +8,6 @@ import (
 	"github.com/sqids/sqids-go"
 )
 
-type URLEncoding struct {
-	Code string
-}
-
 func GetLongUrlByCode(code string, queries *sqlc.Queries) (sqlc.Url, error) {
 	ctx := context.Background()
 
@@ -34,18 +30,15 @@ func decodeBase62(code string) int64 {
 	return int64(joinedId)
 }
 
-func InsertShortURL(longURL string, queries *sqlc.Queries) (*URLEncoding, error) {
+func InsertShortURL(longURL string, queries *sqlc.Queries) (string, error) {
 	ctx := context.Background()
 
 	insertedShortURL, err := queries.CreateShortURL(ctx, longURL)
 	if err != nil {
 		log.Fatalf("error creating ShortURL: %s", err)
-		return &URLEncoding{}, err
+		return "", err
 	}
-
-	return &URLEncoding{
-		Code: encodeBase62(insertedShortURL.ID),
-	}, nil
+	return encodeBase62(insertedShortURL.ID), nil
 }
 
 func encodeBase62(id int64) string {
