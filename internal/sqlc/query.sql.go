@@ -43,3 +43,12 @@ func (q *Queries) GetLongURL(ctx context.Context, id int64) (Url, error) {
 	)
 	return i, err
 }
+
+const incrementClicks = `-- name: IncrementClicks :exec
+UPDATE urls SET clicks = clicks + 1 WHERE id = $1
+`
+
+func (q *Queries) IncrementClicks(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, incrementClicks, id)
+	return err
+}

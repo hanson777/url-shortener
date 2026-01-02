@@ -25,10 +25,6 @@ type ShortenURLResponse struct {
 	LongURL  string `json:"longUrl"`
 }
 
-type RedirectResponse struct {
-	Url string `json:"url"`
-}
-
 func NewHandler(queries *sqlc.Queries) *Handler {
 	return &Handler{queries: queries}
 }
@@ -63,7 +59,7 @@ func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 
 	err := writer.Write(w, http.StatusCreated, response)
 	if err != nil {
-		log.Printf("error encoding writer: %s", err)
+		log.Printf("error encoding writer: %v", err)
 	}
 }
 
@@ -85,9 +81,10 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := &RedirectResponse{
-		url.LongUrl,
+	err = h.queries.IncrementClicks(r.Context(), url.ID)
+	if err != nil {
+		log.Printf("failed to increment clicks: %v", err)
 	}
 
-	http.Redirect(w, r, response.Url, http.StatusPermanentRedirect)
+	http.Redirect(w, r, url.LongUrl, http.StatusFound)
 }

@@ -14,7 +14,7 @@ func GetLongUrlByCode(code string, queries *sqlc.Queries) (sqlc.Url, error) {
 	id := decodeBase62(code)
 	fetchedLongUrl, err := queries.GetLongURL(ctx, id)
 	if err != nil {
-		log.Printf("error fetching url: %s, id: %d", err, id)
+		log.Printf("error fetching url: %v, id: %d", err, id)
 	}
 
 	return fetchedLongUrl, nil
@@ -35,7 +35,7 @@ func InsertShortURL(longURL string, queries *sqlc.Queries) (string, error) {
 
 	insertedShortURL, err := queries.CreateShortURL(ctx, longURL)
 	if err != nil {
-		log.Printf("error creating ShortURL: %s", err)
+		log.Printf("error creating ShortURL: %v", err)
 		return "", err
 	}
 	return encodeBase62(insertedShortURL.ID), nil
