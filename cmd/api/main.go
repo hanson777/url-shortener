@@ -32,8 +32,10 @@ func main() {
 
 	h := handler.NewHandler(queries)
 
+	rateLimiter := middleware.NewRateLimiter()
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /api/shorten", h.CreateShortURL)
+	mux.Handle("POST /api/shorten", middleware.RateLimitEndpoint(rateLimiter, h.CreateShortURL))
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
 	log.Print("Server listening on port 8080")

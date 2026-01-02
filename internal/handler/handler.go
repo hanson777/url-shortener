@@ -57,7 +57,7 @@ func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	code, _ := service.InsertShortURL(normalizedUrl, h.queries)
 
 	response := ShortenURLResponse{
-		ShortURL: "http://localhost:8080/" + code.Code,
+		ShortURL: "http://localhost:8080/" + code,
 		LongURL:  normalizedUrl,
 	}
 
