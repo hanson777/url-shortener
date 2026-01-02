@@ -21,12 +21,12 @@ type ShortenURLRequest struct {
 }
 
 type ShortenURLResponse struct {
-	ShortURL string
-	LongURL  string
+	ShortURL string `json:"shortUrl"`
+	LongURL  string `json:"longUrl"`
 }
 
 type RedirectResponse struct {
-	Url string
+	Url string `json:"url"`
 }
 
 func NewHandler(queries *sqlc.Queries) *Handler {
@@ -63,16 +63,15 @@ func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 
 	err := writer.Write(w, http.StatusCreated, response)
 	if err != nil {
-		log.Fatalf("error encoding writer: %s", err)
+		log.Printf("error encoding writer: %s", err)
 	}
 }
 
 func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
-
 	code := r.PathValue("code")
 
 	if code == "" {
-		log.Fatal("Code must be non-empty")
+		log.Print("Code must be non-empty")
 		return
 	}
 
