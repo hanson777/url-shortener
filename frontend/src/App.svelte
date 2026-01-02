@@ -42,9 +42,9 @@
 
 <h1>URL Shortener</h1>
 
-<form>
+<form on:submit|preventDefault={getShortUrl}>
 	<input type="text" bind:value={url} placeholder="Enter URL" />
-<button type="submit" on:submit={getShortUrl}>Shorten</button>
+<button type="submit">Shorten</button>
 </form>
 {#if shortUrl}
 <div>Short URL: {shortUrl}</div>
