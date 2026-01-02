@@ -7,9 +7,7 @@
 	let shortUrl = ''
 	let error = ''
 
-	const getShortUrl = async (e: SubmitEvent) => {
-		e.preventDefault()
-		
+	const getShortUrl = async () => {
 		error = '';
     const normalized = normalizeUrl(url);
 
