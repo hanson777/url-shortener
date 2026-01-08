@@ -2,7 +2,21 @@
 
 A simple URL shortener service built with Go and Svelte.
 
+## Prerequisites
+
+- Go 1.21+
+- Node.js and npm
+- PostgreSQL (use pgAdmin or any other method to run a local Postgres database)
+
 ## Quick Start
+
+### Database
+
+Create a `.env` file in the root directory with your Postgres connection string:
+
+```
+POSTGRES_URL=postgres://username:password@localhost:5432/dbname
+```
 
 ### Backend
 
