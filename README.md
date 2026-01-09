@@ -15,7 +15,7 @@ A simple URL shortener service built with Go and Svelte.
 Create a `.env` file in the root directory with your Postgres connection string:
 
 ```
-POSTGRES_URL=postgres://username:password@localhost:5432/dbname
+DATABASE_URL=postgres://username:password@localhost:5432/dbname
 ```
 
 ### Backend
