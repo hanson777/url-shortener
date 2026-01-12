@@ -13,4 +13,12 @@ type Url struct {
 	LongUrl   string
 	Clicks    int32
 	CreatedAt pgtype.Timestamptz
+	UserID    pgtype.Int8
+}
+
+type User struct {
+	ID           int32
+	Email        string
+	PasswordHash string
+	CreatedAt    pgtype.Timestamp
 }

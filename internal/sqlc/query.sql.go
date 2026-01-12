@@ -7,12 +7,14 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createShortURL = `-- name: CreateShortURL :one
 INSERT INTO urls (long_url)
 VALUES ($1)
-RETURNING id, long_url, clicks, created_at
+RETURNING id, long_url, clicks, created_at, user_id
 `
 
 func (q *Queries) CreateShortURL(ctx context.Context, longUrl string) (Url, error) {
@@ -23,12 +25,37 @@ func (q *Queries) CreateShortURL(ctx context.Context, longUrl string) (Url, erro
 		&i.LongUrl,
 		&i.Clicks,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (email, password_hash)
+VALUES ($1, $2)
+RETURNING id, email, created_at
+`
+
+type CreateUserParams struct {
+	Email        string
+	PasswordHash string
+}
+
+type CreateUserRow struct {
+	ID        int32
+	Email     string
+	CreatedAt pgtype.Timestamp
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.PasswordHash)
+	var i CreateUserRow
+	err := row.Scan(&i.ID, &i.Email, &i.CreatedAt)
+	return i, err
+}
+
 const getLongURL = `-- name: GetLongURL :one
-SELECT id, long_url, clicks, created_at FROM urls
+SELECT id, long_url, clicks, created_at, user_id FROM urls
 WHERE id = $1 LIMIT 1
 `
 
@@ -39,6 +66,25 @@ func (q *Queries) GetLongURL(ctx context.Context, id int64) (Url, error) {
 		&i.ID,
 		&i.LongUrl,
 		&i.Clicks,
+		&i.CreatedAt,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, email, password_hash, created_at
+FROM users
+WHERE email = $1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
 		&i.CreatedAt,
 	)
 	return i, err

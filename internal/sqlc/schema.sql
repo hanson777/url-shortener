@@ -4,3 +4,15 @@ CREATE TABLE IF NOT EXISTS urls (
     clicks INTEGER DEFAULT 0 NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+
+ALTER TABLE urls ADD COLUMN user_id BIGINT REFERENCES users(id) ON DELETE CASCADE;
+CREATE INDEX idx_urls_user_id ON urls(user_id);
