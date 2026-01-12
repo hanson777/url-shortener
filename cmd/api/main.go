@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/hanson777/url-shortener/internal/auth"
 	"github.com/hanson777/url-shortener/internal/handler"
 	"github.com/hanson777/url-shortener/internal/middleware"
+	"github.com/hanson777/url-shortener/internal/service"
 	"github.com/hanson777/url-shortener/internal/sqlc"
 	"github.com/jackc/pgx/v5"
 	"github.com/lpernett/godotenv"
@@ -22,7 +24,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	conn, err := pgx.Connect(ctx, os.Getenv("POSTGRES_URL"))
+	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,11 +32,16 @@ func main() {
 
 	queries := sqlc.New(conn)
 
-	h := handler.NewHandler(queries)
+	service := service.NewService(queries)
+	authService := auth.NewService(queries)
+
+	h := handler.NewHandler(service)
+	authHandler := auth.NewHandler(authService)
 
 	rateLimiter := middleware.NewRateLimiter()
 
 	mux := http.NewServeMux()
+	mux.Handle("POST /auth/signup", middleware.RateLimitEndpoint(rateLimiter, authHandler.Signup))
 	mux.Handle("POST /api/shorten", middleware.RateLimitEndpoint(rateLimiter, h.CreateShortURL))
 	mux.HandleFunc("GET /{code}", h.Redirect)
 

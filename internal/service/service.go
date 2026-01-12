@@ -5,35 +5,34 @@ import (
 	"log"
 
 	"github.com/hanson777/url-shortener/internal/sqlc"
-	"github.com/sqids/sqids-go"
 )
 
-func GetLongUrlByCode(code string, queries *sqlc.Queries) (sqlc.Url, error) {
-	ctx := context.Background()
+type ServiceInterface interface {
+	GetLongURLByCode(ctx context.Context, code string) (sqlc.Url, error)
+	InsertShortURL(ctx context.Context, longURL string) (string, error)
+	IncrementClicks(ctx context.Context, ID int64) error
+}
 
+type Service struct {
+	queries *sqlc.Queries
+}
+
+func NewService(queries *sqlc.Queries) *Service {
+	return &Service{queries: queries}
+}
+
+func (s *Service) GetLongURLByCode(ctx context.Context, code string) (sqlc.Url, error) {
 	id := decodeBase62(code)
-	fetchedLongUrl, err := queries.GetLongURL(ctx, id)
+	fetchedLongURL, err := s.queries.GetLongURL(ctx, id)
 	if err != nil {
 		log.Printf("error fetching url: %v, id: %d", err, id)
 	}
 
-	return fetchedLongUrl, nil
+	return fetchedLongURL, nil
 }
 
-func decodeBase62(code string) int64 {
-	s, _ := sqids.New()
-	idArray := s.Decode(code)
-	var joinedId uint64
-	for _, digit := range idArray {
-		joinedId = joinedId*10 + digit
-	}
-	return int64(joinedId)
-}
-
-func InsertShortURL(longURL string, queries *sqlc.Queries) (string, error) {
-	ctx := context.Background()
-
-	insertedShortURL, err := queries.CreateShortURL(ctx, longURL)
+func (s *Service) InsertShortURL(ctx context.Context, longURL string) (string, error) {
+	insertedShortURL, err := s.queries.CreateShortURL(ctx, longURL)
 	if err != nil {
 		log.Printf("error creating ShortURL: %v", err)
 		return "", err
@@ -41,8 +40,10 @@ func InsertShortURL(longURL string, queries *sqlc.Queries) (string, error) {
 	return encodeBase62(insertedShortURL.ID), nil
 }
 
-func encodeBase62(id int64) string {
-	s, _ := sqids.New()
-	code, _ := s.Encode([]uint64{uint64(id)})
-	return code
+func (s *Service) IncrementClicks(ctx context.Context, ID int64) error {
+	err := s.queries.IncrementClicks(ctx, ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

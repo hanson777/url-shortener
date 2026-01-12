@@ -8,12 +8,11 @@ import (
 	"net/http"
 
 	"github.com/hanson777/url-shortener/internal/service"
-	"github.com/hanson777/url-shortener/internal/sqlc"
 	"github.com/hanson777/url-shortener/internal/writer"
 )
 
 type Handler struct {
-	queries *sqlc.Queries
+	Service service.ServiceInterface
 }
 
 type ShortenURLRequest struct {
@@ -25,8 +24,8 @@ type ShortenURLResponse struct {
 	LongURL  string `json:"longUrl"`
 }
 
-func NewHandler(queries *sqlc.Queries) *Handler {
-	return &Handler{queries: queries}
+func NewHandler(service service.ServiceInterface) *Handler {
+	return &Handler{Service: service}
 }
 
 func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
@@ -43,18 +42,18 @@ func (h *Handler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	normalizedUrl := normalizeUrl(req.URL)
+	normalizedURL := normalizeURL(req.URL)
 
-	if !isValidURL(normalizedUrl) {
+	if !isValidURL(normalizedURL) {
 		http.Error(w, "URL is not valid", http.StatusBadRequest)
 		return
 	}
 
-	code, _ := service.InsertShortURL(normalizedUrl, h.queries)
+	code, _ := h.Service.InsertShortURL(r.Context(), normalizedURL)
 
 	response := ShortenURLResponse{
 		ShortURL: "http://localhost:8080/" + code,
-		LongURL:  normalizedUrl,
+		LongURL:  normalizedURL,
 	}
 
 	err := writer.Write(w, http.StatusCreated, response)
@@ -71,7 +70,7 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := service.GetLongUrlByCode(code, h.queries)
+	url, err := h.Service.GetLongURLByCode(r.Context(), code)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.NotFound(w, r)
 		return
@@ -81,7 +80,7 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.queries.IncrementClicks(r.Context(), url.ID)
+	err = h.Service.IncrementClicks(r.Context(), url.ID)
 	if err != nil {
 		log.Printf("failed to increment clicks: %v", err)
 	}

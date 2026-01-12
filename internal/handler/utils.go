@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func normalizeUrl(input string) string {
+func normalizeURL(input string) string {
 	input = strings.TrimSpace(input)
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 		input = "https://" + input
