@@ -13,16 +13,14 @@ type Service struct {
 }
 
 type ServiceInterface interface {
-	Signup(email string, password string) string
+	Signup(ctx context.Context, email string, password string) string
 }
 
 func NewService(queries *sqlc.Queries) *Service {
 	return &Service{queries: queries}
 }
 
-func (s *Service) Signup(email string, password string) string {
-	ctx := context.Background()
-
+func (s *Service) Signup(ctx context.Context, email string, password string) string {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 17)
 	if err != nil {
 		log.Printf("error encrypting password: %v", err)

@@ -2,7 +2,10 @@ package auth
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+
+	"github.com/hanson777/url-shortener/internal/writer"
 )
 
 type Handler struct {
@@ -29,5 +32,11 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 	if req.Email == "" || req.Password == "" {
 		http.Error(w, "Email and/or password is required", http.StatusBadRequest)
 		return
+	}
+
+	token := h.Service.Signup(r.Context(), req.Email, req.Password)
+	err := writer.Write(w, http.StatusCreated, token)
+	if err != nil {
+		log.Printf("error writing response: %v", err)
 	}
 }
