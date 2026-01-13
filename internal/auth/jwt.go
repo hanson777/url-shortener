@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/lpernett/godotenv"
 )
 
@@ -26,7 +27,9 @@ func GenerateToken(userID string) string {
 	t = jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"user_id": userID,
-			"exp":     time.Now().Add(5 * time.Minute).Unix(),
+			"exp":     time.Now().Add(24 * time.Hour).Unix(),
+			"iat":     time.Now().Unix(),
+			"jti":     uuid.New().String(),
 		})
 	key = []byte(getKey())
 	signed, _ = t.SignedString(key)

@@ -10,17 +10,28 @@ import (
 )
 
 type MockService struct {
-	SignupFunc func(ctx context.Context, email string, password string) string
+	SignupFunc func(ctx context.Context, email string, password string) (string, error)
+	LoginFunc  func(ctx context.Context, email string, password string) (string, error)
 }
 
-func (m *MockService) Signup(ctx context.Context, email string, password string) string {
-	return m.SignupFunc(ctx, email, password)
+func (m *MockService) Signup(ctx context.Context, email string, password string) (string, error) {
+	if m.SignupFunc != nil {
+		return m.SignupFunc(ctx, email, password)
+	}
+	return "", nil
+}
+
+func (m *MockService) Login(ctx context.Context, email string, password string) (string, error) {
+	if m.LoginFunc != nil {
+		return m.LoginFunc(ctx, email, password)
+	}
+	return "", nil
 }
 
 func TestSignup(t *testing.T) {
 	ms := &MockService{
-		SignupFunc: func(ctx context.Context, email string, password string) string {
-			return "token"
+		SignupFunc: func(ctx context.Context, email string, password string) (string, error) {
+			return "token", nil
 		},
 	}
 

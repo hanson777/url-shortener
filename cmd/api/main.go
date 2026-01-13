@@ -42,6 +42,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("POST /auth/signup", middleware.RateLimitEndpoint(rateLimiter, authHandler.Signup))
+	mux.Handle("POST /auth/login", middleware.RateLimitEndpoint(rateLimiter, authHandler.Login))
 	mux.Handle("POST /api/shorten", middleware.RateLimitEndpoint(rateLimiter, h.CreateShortURL))
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
