@@ -1,3 +1,4 @@
+// Package writer provides encoding helpers for HTTP responses
 package writer
 
 import (

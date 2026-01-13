@@ -1,3 +1,4 @@
+// Package auth provides authentication handlers, services, and middleware for user signup and login
 package auth
 
 import (
@@ -15,6 +16,10 @@ type Handler struct {
 type SignupRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type SignupResponse struct {
+	Token string `json:"token"`
 }
 
 func NewHandler(service ServiceInterface) *Handler {
@@ -35,7 +40,8 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := h.Service.Signup(r.Context(), req.Email, req.Password)
-	err := writer.Write(w, http.StatusCreated, token)
+	res := SignupResponse{Token: token}
+	err := writer.Write(w, http.StatusCreated, res)
 	if err != nil {
 		log.Printf("error writing response: %v", err)
 	}

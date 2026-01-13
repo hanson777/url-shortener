@@ -1,3 +1,4 @@
+// Package handler provides HTTP handlers for URL Shortening operations
 package handler
 
 import (
